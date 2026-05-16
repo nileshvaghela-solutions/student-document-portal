@@ -1,5 +1,9 @@
 from utils.db import supabase
 import streamlit as st
+from utils.document_helper import (
+    get_document_types,
+    upload_student_document,
+)
 
 from utils.auth import login_user
 
@@ -198,6 +202,88 @@ def download_results_page():
 
                 st.rerun()
 
+def upload_document_page():
+    
+    st.title(
+        "Upload Student Application"
+    )
+
+    enrollment = (
+        st.session_state
+        .student["enrollment"]
+    )
+
+    document_types = (
+        get_document_types()
+    )
+
+    selected_doc = st.selectbox(
+        "Select Document Type",
+
+        document_types,
+
+        format_func=lambda x:
+            x["doc_type_name"]
+    )
+
+    uploaded_file = st.file_uploader(
+        "Upload PDF",
+
+        type=["pdf"]
+    )
+
+    st.caption(
+        "Maximum file size: 5 MB"
+    )
+
+    if uploaded_file:
+
+        file_size_mb = (
+            uploaded_file.size
+            / (1024 * 1024)
+        )
+
+        if file_size_mb > 5:
+
+            st.error(
+                "File size exceeds 5 MB."
+            )
+
+            return
+
+    if st.button(
+        "Upload Document"
+    ):
+
+        if not uploaded_file:
+
+            st.error(
+                "Please upload a PDF."
+            )
+
+            return
+
+        result = upload_student_document(
+            enrollment,
+            selected_doc,
+            uploaded_file
+        )
+
+        if result["success"]:
+
+            st.success(
+                result["message"]
+            )
+
+        else:
+
+            st.error(
+                result["message"]
+            )
+
+        st.success(
+            "Document uploaded successfully."
+        )
 
 def dashboard():
 
@@ -207,6 +293,7 @@ def dashboard():
         "Select Option",
         [
             "Download Marksheets",
+            "Upload Document",
             "Logout",
         ],
     )
@@ -215,6 +302,9 @@ def dashboard():
 
         download_results_page()
 
+    elif menu == "Upload Document":
+        upload_document_page()
+        
     elif menu == "Logout":
 
         logout()
