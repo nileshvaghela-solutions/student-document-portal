@@ -141,3 +141,110 @@ def upload_student_document(
         "message":
             ""
     }
+
+def download_document(filepath,bucket):
+
+    filepath = (filepath.strip().lstrip("/"))
+
+    response = (
+        supabase.storage
+        .from_(bucket)
+        .download(filepath)
+    )
+
+    return response
+
+# -----------------------------
+# DOCUMENT SUMMARY
+# -----------------------------
+def get_student_document_summary(enrollment):
+
+    response = (
+        supabase.table("student_documents")
+        .select("""
+            doc_type_id,
+            doc_types(
+                doc_type_name,
+                short_code,
+                is_active
+            )
+        """)
+        .eq("enrollment", enrollment.strip().upper())
+        .eq("doc_types.is_active", True)
+        .execute()
+    )
+
+    summary = {}
+
+    for row in response.data:
+
+        name = row["doc_types"]["doc_type_name"]
+        code = row["doc_types"]["short_code"]
+
+        if code not in summary:
+
+            summary[code] = {
+                "name": name,
+                "count": 0
+            }
+
+        summary[code]["count"] += 1
+
+    final_summary = []
+    counter = 1
+
+    for code, value in summary.items():
+
+        final_summary.append({
+            "S#": counter,
+            "Document Type": value["name"],   # UI only
+            "short_code": code,              # INTERNAL KEY
+            "Count": value["count"],
+        })
+
+        counter += 1
+
+    return final_summary
+
+
+# -----------------------------
+# DOCUMENT LIST
+# -----------------------------
+def get_student_documents(enrollment):
+
+    response = (
+        supabase.table("student_documents")
+        .select("""
+            *,
+            doc_types(
+                doc_type_name,
+                short_code,
+                is_active
+            )
+        """)
+        .eq("enrollment", enrollment.strip().upper())
+        .eq("doc_types.is_active", True)
+        .order("upload_date", desc=True)
+        .execute()
+    )
+
+    documents = []
+    counter = 1
+
+    for row in response.data:
+
+        documents.append({
+            "S#": counter,
+            "Upload Date": row["upload_date"],
+            "Document Type": row["doc_types"]["doc_type_name"],
+
+            # IMPORTANT KEY
+            "short_code": row["doc_types"]["short_code"],
+
+            "filepath": f"{row['doc_types']['short_code']}/{row['stored_filename']}",
+            "filename": row["stored_filename"],
+        })
+
+        counter += 1
+
+    return documents
