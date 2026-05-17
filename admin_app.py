@@ -2,7 +2,12 @@ import streamlit as st
 from utils.admin_auth import admin_login
 from results import show_results
 from documents import show_documents
-
+from add_document_type import (
+    show_add_document_type
+)
+from add_admin import (
+    show_add_admin
+)
 st.set_page_config(
     page_title="Admin Portal",
     page_icon="🔐",
@@ -70,10 +75,10 @@ def dashboard():
         show_results()
 
     elif menu == "Add Document Type":
-        st.header("Add Document Type")
+        show_add_document_type()
 
     elif menu == "Add Admin":
-        st.header("Add Admin")
+        show_add_admin()
 
     elif menu == "Logout":
         logout()
