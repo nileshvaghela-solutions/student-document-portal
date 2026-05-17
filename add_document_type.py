@@ -133,6 +133,18 @@ def show_add_document_type():
                         "selected_doc_type"
                     ] = row
 
+                    # reset cached fields
+
+                    st.session_state[
+                        "edit_doc_name"
+                    ] = row["doc_type_name"]
+
+                    st.session_state[
+                        "edit_short_code"
+                    ] = row["short_code"]
+
+                    st.rerun()
+
     # ==============================
     # RIGHT SIDE EDIT PANEL
     # ==============================
@@ -158,17 +170,11 @@ def show_add_document_type():
 
                 edit_name = st.text_input(
                     "Document Type Name",
-                    value=selected[
-                        "doc_type_name"
-                    ],
                     key="edit_doc_name"
                 )
 
                 edit_code = st.text_input(
                     "Short Code",
-                    value=selected[
-                        "short_code"
-                    ],
                     key="edit_short_code"
                 )
 
@@ -189,13 +195,19 @@ def show_add_document_type():
 
                     if result["success"]:
 
+                        # clear ADD form fields
+
+                        st.session_state[
+                            "new_doc_name"
+                        ] = ""
+
+                        st.session_state[
+                            "new_short_code"
+                        ] = ""
+
                         st.success(
                             result["message"]
                         )
-
-                        del st.session_state[
-                            "selected_doc_type"
-                        ]
 
                         st.rerun()
 
